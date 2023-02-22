@@ -1,0 +1,58 @@
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/cannon/build/cannon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/OBJLoader.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      // Create the Three.js renderer and scene
+      const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("canvas") });
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 10;
+      const scene = new THREE.Scene();
+
+      // Load the spine models using Three.js and convert them to Cannon.js shapes
+      const loader = new THREE.OBJLoader();
+      const files = ["resources/Model_8_8.obj", "resources/Model_9_9.obj", "resources/Model_10_10.obj", "resources/Model_11_11.obj"];
+      const shapes = [];
+      const bodies = [];
+      files.forEach((file) => {
+        loader.load(file, (object) => {
+          const geometry = object.children[0].geometry;
+          const vertices = geometry.attributes.position.array;
+          const indices = geometry.index.array;
+          const shape = new CANNON.ConvexPolyhedron(vertices, indices);
+          shapes.push(shape);
+
+          // Create a Cannon.js body to represent the spine
+          const body = new CANNON.Body({
+            mass: 1,
+            shape: shape,
+          });
+          bodies.push(body);
+
+          // Add the body to the world
+          const world = new CANNON.World();
+          world.addBody(body);
+
+          // Add the object to the Three.js scene
+          scene.add(object);
+
+          // Simulate the physics behavior of the spine over time
+          function update() {
+            world.step(1/60);
+            // Update the position of the Three.js object based on the Cannon.js body
+            object.position.copy(body.position);
+            object.quaternion.copy(body.quaternion);
+            // Render the scene
+            renderer.render(scene, camera);
+            requestAnimationFrame(update);
+          }
+          update();
+        });
+      });
+    </script>
+  </body>
+</html>
