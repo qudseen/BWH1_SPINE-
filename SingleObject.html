@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>OBJ Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/cannon/build/cannon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/OBJLoader.js"></script>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    // Create the Three.js renderer and scene
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("canvas") });
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 10;
+      const scene = new THREE.Scene();
+
+    // Create a new OBJLoader and load your OBJ file
+    const loader = new THREE.OBJLoader();
+    const boxSize = new CANNON.Vec3(1, 1, 1);
+    const shapes = [];
+    const bodies = [];
+    loader.load("resources/Model_8_8.obj", function(object) {
+      const shape = new CANNON.Box(boxSize); // create a box shape without using indices
+      shapes.push(shape);
+     // Create a Cannon.js body to represent the spine
+     const body = new CANNON.Body({
+            mass: 1,
+            shape: shape,
+          });
+          bodies.push(body);
+
+          const world = new CANNON.World();
+          world.addBody(body);
+
+          // Add the object to the Three.js scene
+          scene.add(object);
+
+          // Simulate the physics behavior of the spine over time
+          function update() {
+            world.step(1/60);
+            // Update the position of the Three.js object based on the Cannon.js body
+            object.position.copy(body.position);
+            object.quaternion.copy(body.quaternion);
+            // Render the scene
+            renderer.render(scene, camera);
+            requestAnimationFrame(update);
+          }
+          update();
+        });
+    </script>
+  </body>
+</html>
