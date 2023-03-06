@@ -45,6 +45,7 @@
       directionalLight = new THREE.DirectionalLight( 0xffffff, 5.0 );
       directionalLight.position.set( 10, 100, -100 );
       scene.add( directionalLight );
+      console.dir(CANNON);
       var demo = new CANNON.Demo();
       var mass = 1, size = 1;
       function createTetra(){
