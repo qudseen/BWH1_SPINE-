@@ -1,0 +1,121 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>OBJ Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/cannon/build/cannon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/OBJLoader.js"></script>
+  </head>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://threejs.org/build/three.module.js"
+      }
+    }
+  </script>
+  <script type='module'>
+    import * as THREE from 'three';
+    import { GUI } from 'https://unpkg.com/dat.gui@0.7.7/build/dat.gui.module.js';
+    import { TrackballControls } from 'https://threejs.org/examples/jsm/controls/TrackballControls.js';
+    import { OBJLoader } from 'https://threejs.org/examples/jsm/loaders/OBJLoader.js';
+     // Create the Three.js renderer and scene
+    let scene, camera, renderer, effect, ambientLight, directionalLight, light, mesh, toonMaterial, controls, controller;
+     window.onload = function() {
+      console.log("Window loaded!");
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
+      camera.position.set( 0, 0, -500);
+
+      renderer = new THREE.WebGLRenderer({ });
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+  
+      ambientLight = new THREE.AmbientLight();
+      scene.add( ambientLight );
+
+      directionalLight = new THREE.DirectionalLight( 0xffffff, 5.0 );
+      directionalLight.position.set( 10, 100, -100 );
+      scene.add( directionalLight );
+
+
+      // Load the spine models using Three.js and convert them to Cannon.js shapes
+      const loader = new OBJLoader();
+      const files = ["resources/Model_8_8.obj", "resources/Model_9_9.obj", "resources/Model_10_10.obj", "resources/Model_11_11.obj"];
+      const shapes = [];
+      const bodies = [];
+      files.forEach((file) => {
+        loader.load(file, (object) => {
+          const boxSize = new CANNON.Vec3(1,1,1);
+          const shape = new CANNON.Box(boxSize); 
+          shapes.push(shape);
+
+      // Create a Cannon.js body to represent the spine
+          const body = new CANNON.Body({
+            mass: 1,
+            shape: shape,
+          });
+          bodies.push(body);
+
+       // Add the body to the world
+          const world = new CANNON.World();
+          world.addBody(body);
+
+       // Add the object to the Three.js scene
+          scene.add(object);
+
+         // Simulate the physics behavior of the spine over time
+         function update() {
+            world.step(1/60);
+            // Update the position of the Three.js object based on the Cannon.js body
+            object.position.copy(body.position);
+            object.quaternion.copy(body.quaternion);
+            // Render the scene
+            renderer.render(scene, camera);
+            requestAnimationFrame(update);
+            // Initialize trackball controls and start animation loop
+
+            controls = new TrackballControls( camera, renderer.domElement );
+
+          animate();
+
+          function animate() {
+
+          requestAnimationFrame( animate );
+
+          controls.update();
+
+         renderer.render( scene, camera );
+      
+         };
+     
+          }
+          update();
+        });
+        function setupWorld(demo){
+        var world = demo.getWorld();
+        world.gravity.set(0,0,-30);
+        world.broadphase = new CANNON.NaiveBroadphase();
+        world.solver.iterations = 17;
+
+        world.defaultContactMaterial.contactEquationStiffness = 1e6;
+        world.defaultContactMaterial.contactEquationRelaxation = 3;
+
+        // ground plane
+        var groundShape = new CANNON.Plane();
+        var groundBody = new CANNON.Body({ mass: 0 });
+        groundBody.addShape(groundShape);
+        groundBody.position.set(-10,0,0);
+        world.addBody(groundBody);
+        demo.addVisual(groundBody);
+        return world;
+      };
+
+      demo.start();
+
+      })
+    }
+    </script>
+   <body>
+  </body>
+</html>
