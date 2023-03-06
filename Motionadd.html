@@ -6,6 +6,10 @@
     <script src="https://cdn.jsdelivr.net/npm/three/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/OBJLoader.js"></script>
   </head>
+  <script src="../libs/TrackballControls.js"></script>
+  <script src="../libs/Detector.js"></script>
+  <script src="../libs/Stats.js"></script>
+  <script src="../libs/smoothie.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -39,6 +43,30 @@
       scene.add( directionalLight );
       var demo = new CANNON.Demo();
       var mass = 1, size = 1;
+      function createTetra(){
+            var verts = [new CANNON.Vec3(0,0,0),
+                         new CANNON.Vec3(2,0,0),
+                         new CANNON.Vec3(0,2,0),
+                         new CANNON.Vec3(0,0,2)];
+            var offset = -0.35;
+            for(var i=0; i<verts.length; i++){
+                var v = verts[i];
+                v.x += offset;
+                v.y += offset;
+                v.z += offset;
+            }
+            return new CANNON.ConvexPolyhedron(verts,
+                                                [
+                                                    [0,3,2], // -x
+                                                    [0,1,3], // -y
+                                                    [0,2,1], // -z
+                                                    [1,2,3], // +xyz
+                                                ]);
+        }
+
+        demo.addScene("all shapes",function(){
+            var world = setupWorld(demo);
+
 
       // Load the spine models using Three.js and convert them to Cannon.js shapes
       const loader = new OBJLoader();
