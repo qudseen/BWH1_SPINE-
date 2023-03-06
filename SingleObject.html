@@ -69,11 +69,6 @@
             // Render the scene
             renderer.render(scene, camera);
             requestAnimationFrame(update);
-            controller = {
-      'color': 0xffffff // we can use this single color
-                    // container for all colors in the scene 
-                    // if we modify the onChange callback (see below)
-      }
       var gui = new GUI();
       var ambientFolder = gui.addFolder('Ambient Light');
       ambientFolder.addColor(controller, 'color').onChange( function(value) { ambientLight.color.setHex(value); });
