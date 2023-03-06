@@ -60,6 +60,41 @@
             // Render the scene
             renderer.render(scene, camera);
             requestAnimationFrame(update);
+            controller = {
+      'color': 0xffffff // we can use this single color
+                    // container for all colors in the scene 
+                    // if we modify the onChange callback (see below)
+      }
+      var gui = new GUI();
+      var ambientFolder = gui.addFolder('Ambient Light');
+      ambientFolder.addColor(controller, 'color').onChange( function(value) { ambientLight.color.setHex(value); });
+      ambientFolder.open();
+
+      var directionalFolder = gui.addFolder('Directional Light');
+      directionalFolder.addColor(controller, 'color').onChange( function(value) { directionalLight.color.setHex(value); });
+      directionalFolder.add(directionalLight.position, 'x', -100, 100);
+      directionalFolder.add(directionalLight.position, 'y', -100, 100);
+      directionalFolder.add(directionalLight.position, 'z', -100, 100);
+      directionalFolder.open();
+
+      gui.open();
+
+     // Initialize trackball controls and start animation loop
+
+      controls = new TrackballControls( camera, renderer.domElement );
+
+      animate();
+
+      function animate() {
+
+      requestAnimationFrame( animate );
+
+      controls.update();
+
+      renderer.render( scene, camera );
+      
+     };
+     
           }
           update();
         });
