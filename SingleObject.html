@@ -7,9 +7,11 @@
   <script src="https://cdn.jsdelivr.net/npm/three/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/OBJLoader.js"></script>
 </head>
-<body>
-  <canvas id="canvas"></canvas>
-  <script>
+    <script type='module'>
+        import * as THREE from 'three';
+        import { GUI } from 'https://unpkg.com/dat.gui@0.7.7/build/dat.gui.module.js';
+        import { TrackballControls } from 'https://threejs.org/examples/jsm/controls/TrackballControls.js';
+        import { OBJLoader } from 'https://threejs.org/examples/jsm/loaders/OBJLoader.js';
     // Create the Three.js renderer and scene
     let scene, camera, renderer, effect, ambientLight, directionalLight, light, mesh, toonMaterial, controls, controller;
      window.onload = function() {
