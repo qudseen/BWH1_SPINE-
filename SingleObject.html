@@ -35,6 +35,7 @@
     const shapes = [];
     const bodies = [];
     loader.load("resources/Model_8_8.obj", function(object) {
+      const boxSize = new THREE.BoxGeometry(1,1,1);
       const shape = new CANNON.Box(boxSize); // create a box shape without using indices
       shapes.push(shape);
      // Create a Cannon.js body to represent the spine
