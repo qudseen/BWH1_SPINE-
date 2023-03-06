@@ -40,7 +40,7 @@
       scene.add( directionalLight );
 
     // Create a new OBJLoader and load your OBJ file
-    const loader = new THREE.OBJLoader();
+    const loader = new OBJLoader();
     const shapes = [];
     const bodies = [];
     loader.load("resources/Model_8_8.obj", function(object) {
