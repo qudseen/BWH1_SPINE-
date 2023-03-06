@@ -37,7 +37,8 @@
       directionalLight = new THREE.DirectionalLight( 0xffffff, 5.0 );
       directionalLight.position.set( 10, 100, -100 );
       scene.add( directionalLight );
-
+      var demo = new CANNON.Demo();
+      var mass = 1, size = 1;
 
       // Load the spine models using Three.js and convert them to Cannon.js shapes
       const loader = new OBJLoader();
