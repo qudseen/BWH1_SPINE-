@@ -69,35 +69,21 @@
             // Render the scene
             renderer.render(scene, camera);
             requestAnimationFrame(update);
-      var gui = new GUI();
-      var ambientFolder = gui.addFolder('Ambient Light');
-      ambientFolder.addColor(controller, 'color').onChange( function(value) { ambientLight.color.setHex(value); });
-      ambientFolder.open();
+            // Initialize trackball controls and start animation loop
 
-      var directionalFolder = gui.addFolder('Directional Light');
-      directionalFolder.addColor(controller, 'color').onChange( function(value) { directionalLight.color.setHex(value); });
-      directionalFolder.add(directionalLight.position, 'x', -100, 100);
-      directionalFolder.add(directionalLight.position, 'y', -100, 100);
-      directionalFolder.add(directionalLight.position, 'z', -100, 100);
-      directionalFolder.open();
+            controls = new TrackballControls( camera, renderer.domElement );
 
-      gui.open();
+          animate();
 
-     // Initialize trackball controls and start animation loop
+          function animate() {
 
-      controls = new TrackballControls( camera, renderer.domElement );
+          requestAnimationFrame( animate );
 
-      animate();
+          controls.update();
 
-      function animate() {
-
-      requestAnimationFrame( animate );
-
-      controls.update();
-
-      renderer.render( scene, camera );
+         renderer.render( scene, camera );
       
-     };
+         };
      
           }
           update();
