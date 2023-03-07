@@ -103,7 +103,7 @@
             // Render the scene
             renderer.render(scene, camera);
             requestAnimationFrame(update);
-            // Initialize trackball controls and start animation loop
+            // Initialize orbit controls and start animation loop
 
             var controls = new OrbitControls( camera, renderer.domElement );
             controls.addEventListener( 'change', function() { renderer.render(scene, camera); } );
@@ -117,21 +117,13 @@
 
           world.defaultContactMaterial.contactEquationStiffness = 1e6;
           world.defaultContactMaterial.contactEquationRelaxation = 3;
-
-         // ground plane
-         var groundShape = new CANNON.Plane();
-         var groundBody = new CANNON.Body({ mass: 0 });
-         groundBody.addShape(groundShape);
-         groundBody.position.set(-10,0,0);
-         world.addBody(groundBody);
-         world.addVisual(groundBody);
-         };
      
           }
           update();
         
+    }
     })
-    })
+   })
    }
     </script>
    <body>
