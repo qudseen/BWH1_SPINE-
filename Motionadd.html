@@ -105,7 +105,7 @@
             requestAnimationFrame(update);
             // Initialize trackball controls and start animation loop
 
-            var controls = new THREE.OrbitControls( camera, renderer.domElement );
+            var controls = new OrbitControls( camera, renderer.domElement );
             controls.addEventListener( 'change', function() { renderer.render(scene, camera); } );
           animate();
 
