@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <title>My 3D Model</title>
+    <style>
+      html,
+      body {
+        background-color: #000;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden !important;
+      }
+    </style>
+    <script type="module">
+        import * as THREE from "https://cdn.skypack.dev/three@0.136.0/build/three.module.js";
+        import { GUI } from "https://cdn.skypack.dev/dat.gui@0.7.7/build/dat.gui.module.js";
+        import { TrackballControls } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/TrackballControls.js";
+        import {OrbitControls} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
+        import { STLLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/STLLoader.js";
+        import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js";
+        import * as CANNON from 'https://cdn.skypack.dev/cannon-es';
+      // Set up the scene
+
+     let scene, camera, renderer, effect, position,quaternion,ambientLight, directionalLight, light, mesh, toonMaterial, controls, controller,mesh1, mesh2, mesh3,geometry,body1,body2,body3,width,height,depth,shape1,shape2,shape3;
+     window.onload = async function() {
+      console.log("Window loaded!");
+      scene = new THREE.Scene(); // scene
+      
+      // webGL
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+      // camera 
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+      const orbit = new OrbitControls(camera,renderer.domElement);
+      camera.position.set( 10, 30, 10);
+      camera.lookAt(0, 0, 0)
+      orbit.update();
+      
+      // light
+      ambientLight = new THREE.AmbientLight(0x404040);
+      scene.add( ambientLight );
+
+      directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      directionalLight.position.set(10, 10, 0);
+      scene.add(directionalLight);
+      // Load model 
+      let mixer;
+      async function loadModel() {
+      return new Promise(function(resolve, reject) {
+          const loader = new GLTFLoader();
+          loader.load("545.glb",function ( gltf ) {
+            const model = gltf.scene
+            scene.add(model);
+            mixer = new THREE.AnimationMixer(model);
+            const clips = gltf.animations;
+            const clip = THREE.AnimationClip.findByName(clips , 'bending-twisting');
+            const action = mixer.clipAction(clip);
+            action.play();
+            resolve();
+          })
+      })
+    }
+
+      await loadModel();
+      controller = {
+      'color': 0xffffff // we can use this single color
+                    // container for all colors in the scene 
+                    // if we modify the onChange callback (see below)
+      }
+      const gui = new GUI();
+      const ambientFolder = gui.addFolder("Ambient Light");
+        ambientFolder
+          .addColor(controller, "color")
+          .onChange(function (value) {
+            ambientLight.color.setHex(value);
+          });
+        ambientFolder.open();
+
+        const directionalFolder = gui.addFolder("Directional Light");
+        directionalFolder
+          .addColor(controller, "color")
+          .onChange(function (value) {
+            directionalLight.color.setHex(value);
+          });
+        directionalFolder.add(directionalLight.position, "x", -100, 100);
+        directionalFolder.add(directionalLight.position, "y", -100, 100);
+        directionalFolder.add(directionalLight.position, "z", -100, 100);
+        directionalFolder.open();
+
+        gui.open();
+        const clock = new THREE.Clock();
+        function animate(){
+            mixer.update(clock.getDelta());
+            renderer.render(scene,camera);
+        }
+        renderer.setAnimationLoop(animate);
+     window.addEventListener('resize',function(){
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth,window.innerHeight)
+     });
+    };
+</script>
+</head>
+<body>
+</body>
+
+</html>
