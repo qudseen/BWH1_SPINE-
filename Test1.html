@@ -1,0 +1,320 @@
+<html>
+  <head>
+    <title>My 3D Model</title>
+    <style>
+      html,
+      body {
+        background-color: #000;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden !important;
+      }
+    </style>
+    <script type="module">
+        import * as THREE from "https://cdn.skypack.dev/three@0.136.0/build/three.module.js";
+        import { GUI } from "https://cdn.skypack.dev/dat.gui@0.7.7/build/dat.gui.module.js";
+        import { TrackballControls } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/TrackballControls.js";
+        import {OrbitControls} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
+        import { STLLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/STLLoader.js";
+        import { OBJLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/OBJLoader.js";
+        import * as CANNON from 'https://cdn.skypack.dev/cannon-es';
+      // Set up the scene
+
+     let scene, camera, renderer, effect, position,quaternion,ambientLight, directionalLight, light, mesh, toonMaterial, controls, controller,mesh1, mesh2, mesh3,geometry,body1,body2,body3,width,height,depth,shape1,shape2,shape3;
+     window.onload = async function() {
+      console.log("Window loaded!");
+      scene = new THREE.Scene(); // scene
+      
+      // webGL
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+      // camera 
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+      const orbit = new OrbitControls(camera,renderer.domElement);
+      camera.position.set( 0, 3000, -100);
+      camera.lookAt(0, 0, 0)
+      orbit.update();
+      
+      // light
+      ambientLight = new THREE.AmbientLight(0x404040);
+      scene.add( ambientLight );
+
+      directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      directionalLight.position.set(10, 10, 0);
+      scene.add(directionalLight);
+      
+      const world = new CANNON.World({
+       gravity : new CANNON.Vec3(0,-9.81,0)
+     });
+
+     // Load a 3D model
+     //1st obj file 
+     async function loadObj1() {
+      const promise = new Promise(function(resolve, reject) {
+          const objLoader1 = new OBJLoader();
+          objLoader1.load("resources/Model_8_8.obj", (object) => {
+          const material = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+          const geometry = object.children[0].geometry;
+          mesh1 = new THREE.Mesh(geometry, material);
+          mesh1.position.set(0, 1800, -100);
+          
+          //mesh1.rotateZ(Math.PI);
+          //mesh1.isMoving = false;
+          scene.add(mesh1);
+          const boundingBox = new THREE.Box3().setFromObject(object);
+          const width = boundingBox.max.x - boundingBox.min.x;
+          const height = boundingBox.max.y - boundingBox.min.y;
+          const depth = boundingBox.max.z - boundingBox.min.z;
+          shape1 = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
+            body1 = new CANNON.Body({
+            mass :1,
+            shape :shape1
+            })
+            body1.position.set(0, 1800, -100);
+            world.addBody(body1);
+            resolve();
+          })
+      });
+      return promise;
+     }
+ 
+     async function loadObj2() {
+      const promise = new Promise(function(resolve, reject) {
+        // 2nd obj file 
+        const objLoader2 = new OBJLoader();
+        objLoader2.load("resources/Model_9_9.obj", (object) => {
+          const material = new THREE.MeshPhongMaterial({ color: 0xCD853F })
+          const geometry = object.children[0].geometry;
+          mesh2 = new THREE.Mesh(geometry, material);
+          mesh2.rotateZ(Math.PI);
+          mesh2.position.set(0, 1800, -100); 
+          mesh2.isMoving = false;
+          scene.add(mesh2);
+          const boundingBox = new THREE.Box3().setFromObject(object);
+          const width = boundingBox.max.x - boundingBox.min.x;
+          const height = boundingBox.max.y - boundingBox.min.y;
+          const depth = boundingBox.max.z - boundingBox.min.z;
+          shape2 = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
+          body2 = new CANNON.Body({
+            mass :1,
+            shape :shape2
+          })
+          body2.position.set(0, 1800, -100);
+          world.addBody(body2);
+          resolve();
+        })
+      });
+      return promise;
+     }
+
+     async function loadObj3() {
+      const promise = new Promise(function(resolve, reject) {
+        // 3rd obj file 
+          const objLoader3 = new OBJLoader();
+          objLoader3.load("resources/Model_10_10.obj", (object) => {
+            const material = new THREE.MeshPhongMaterial({ color: 0xDEB887 });
+            const geometry = object.children[0].geometry;
+            mesh3 = new THREE.Mesh(geometry, material);
+            mesh3.rotateZ(Math.PI);
+            mesh3.position.set(0, 1800, -100); 
+            mesh3.isMoving = false;
+            scene.add(mesh3);
+            const boundingBox = new THREE.Box3().setFromObject(object);
+            const width = boundingBox.max.x - boundingBox.min.x;
+            const height = boundingBox.max.y - boundingBox.min.y;
+            const depth = boundingBox.max.z - boundingBox.min.z;
+            shape3 = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
+            body3 = new CANNON.Body({
+              mass :1,
+              shape :shape3
+            })
+            body3.position.set(0, 1800, -100);
+            world.addBody(body3);
+            resolve();
+          });
+      });
+      return promise;
+     }
+
+    await loadObj1();
+    await loadObj2();
+    await loadObj3();
+    
+      controller = {
+      'color': 0xffffff // we can use this single color
+                    // container for all colors in the scene 
+                    // if we modify the onChange callback (see below)
+      }
+      let guiControls = {
+          movePart1: false,
+          movePart2: false,
+          movePart3: false,
+        };
+        const gui = new GUI();
+        function resetMesh(mesh) {
+        mesh.position.set(0, 1800, -100);
+        mesh.rotation.set(0, 0, Math.PI);
+        }
+        gui.add(guiControls, "movePart1").name("Move Part 1").onChange(function(value) {
+          if (value) {
+            mesh1.isMoving = true;
+          } else {
+            mesh1.isMoving = false;
+            resetMesh(mesh1);
+          }
+        });
+        gui.add(guiControls, "movePart2").name("Move Part 2").onChange(function(value) {
+          if (value) {
+            mesh2.isMoving = true;
+          } else {
+            mesh2.isMoving = false;
+            resetMesh(mesh2);
+          }
+        });
+        gui.add(guiControls, "movePart3").name("Move Part 3").onChange(function(value) {
+          if (value) {
+            mesh3.isMoving = true;
+          } else {
+            mesh3.isMoving = false;
+            resetMesh(mesh3);
+          }
+        });
+        const ambientFolder = gui.addFolder("Ambient Light");
+        ambientFolder
+          .addColor(controller, "color")
+          .onChange(function (value) {
+            ambientLight.color.setHex(value);
+          });
+        ambientFolder.open();
+
+        const directionalFolder = gui.addFolder("Directional Light");
+        directionalFolder
+          .addColor(controller, "color")
+          .onChange(function (value) {
+            directionalLight.color.setHex(value);
+          });
+        directionalFolder.add(directionalLight.position, "x", -100, 100);
+        directionalFolder.add(directionalLight.position, "y", -100, 100);
+        directionalFolder.add(directionalLight.position, "z", -100, 100);
+        directionalFolder.open();
+
+        gui.open();
+
+
+     // Initialize trackball controls and start animation loop
+     controls = new TrackballControls(camera, renderer.domElement);
+      controls.rotateSpeed = 1.0;
+      controls.zoomSpeed = 5.0;
+      controls.panSpeed = 0.8;
+      let mesh1Max = -98;
+      let mesh1Min = -104;
+      let mesh2Max = 1800.5;
+      let mesh2Min = 1799.5;
+      let y = 1800;
+
+    // Define an update function to move the mesh up and down
+    const update = () => {
+      if (mesh6.isMoving) {
+          // Move the mesh up and down between y=1700 and y=1900
+          y += 2 * Math.sign(Math.sin(Date.now() / 1000));
+          mesh6.position.setY(y);
+          }
+        };
+     const groundGeo= new THREE.PlaneGeometry(200,200);
+     const groundMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      wireframe: true
+     });
+     const groundMesh= new THREE.Mesh(groundGeo,groundMat);
+     groundMesh.position.set(0, 1800, -100);
+     scene.add(groundMesh);
+
+    const groundBody= new CANNON.Body({
+      shape : new CANNON.Plane(),
+      type : CANNON.Body.STATIC
+    })
+    world.addBody(groundBody);
+    
+    groundBody.quaternion.setFromEuler(-Math.PI / 2,0,0);
+    const timeStep= 1/60;
+    const lockConstraint1 = new CANNON.LockConstraint(body1,body2);
+    world.addConstraint(lockConstraint1);
+    const lockConstraint2 = new CANNON.LockConstraint(body2,body3);
+    world.addConstraint(lockConstraint2);
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Move the parts based on the checkbox values and if meshes are defined
+      if (guiControls.movePart1 && mesh1) {
+         if (mesh1.position.z >= mesh1Max) {
+              mesh1.isMoving = false;
+            }
+         if (mesh1.position.z <= mesh1Min) {
+              mesh1.isMoving = true;
+            }
+         if (mesh1.isMoving) {
+              
+              mesh1.position.z += 0.05;
+           } else {
+              
+              mesh1.position.z -= 0.05;
+            }
+          }
+          if (guiControls.movePart2 && mesh2) {
+            if (mesh2.position.y >= mesh2Max) {
+              mesh2.isMoving = false;
+            }
+            if (mesh2.position.y <= mesh2Min) {
+              mesh2.isMoving = true;
+            }
+            if (mesh2.isMoving) {
+              mesh2.position.y += 0.01;
+              mesh2.rotation.y += 0.01;
+            } else {
+              mesh2.position.y -= 0.01;
+              mesh2.rotation.y -= 0.01;
+            }
+          }
+          if (guiControls.movePart3 && mesh3) {
+            if (mesh3.position.z >= mesh1Max) {
+              mesh3.isMoving = false;
+            }
+            if (mesh3.position.z <= mesh1Min) {
+              mesh3.isMoving = true;
+            }
+            if (mesh3.isMoving) {
+              mesh3.position.z += 0.05;
+              
+            } else {
+              mesh3.position.z += 0.05;
+              
+            }
+          }
+          controls.update();
+          world.step(timeStep);
+          //groundBody.position.copy(groundBody.position);
+          //groundBody.quaternion.copy(groundBody.quaternion);
+          body1.position.copy(body1.position);
+          body1.quaternion.copy(body1.quaternion);
+          body2.position.copy(body2.position);
+          body2.quaternion.copy(body2.quaternion);
+          body3.position.copy(body3.position);
+          body3.quaternion.copy(body3.quaternion);
+          renderer.render(scene, camera);
+     }
+     renderer.setAnimationLoop(animate);
+     window.addEventListener('resize',function(){
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth,window.innerHeight)
+     });
+    };
+</script>
+</head>
+<body>
+</body>
+
+</html>
