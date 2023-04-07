@@ -60,7 +60,7 @@
           mesh1 = new THREE.Mesh(geometry, material);
           mesh1.position.set(0, 1800, -100);
           
-          //mesh1.rotateZ(Math.PI);
+          mesh1.rotateZ(Math.PI);
           //mesh1.isMoving = false;
           scene.add(mesh1);
           const boundingBox = new THREE.Box3().setFromObject(object);
