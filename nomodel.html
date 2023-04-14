@@ -1,0 +1,89 @@
+<html>
+  <head>
+    <title>My 3D Model</title>
+    <script type="module">
+        import * as THREE from "https://cdn.skypack.dev/three@0.136.0/build/three.module.js";
+        import { GUI } from "https://cdn.skypack.dev/dat.gui@0.7.7/build/dat.gui.module.js";
+        import { TrackballControls } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/TrackballControls.js";
+        import {OrbitControls} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
+        import { STLLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/STLLoader.js";
+        import { OBJLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/OBJLoader.js";
+        import * as CANNON from 'https://cdn.skypack.dev/cannon-es';
+        let ambientLight,directionalLight;
+        // webgl 
+        const renderer = new THREE.WebGLRenderer();
+
+        renderer.setSize(window.innerWidth,window.innerHeight);
+
+        document.body.appendChild(renderer.domElement);
+       // scene
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            window.innerWidth/window.innerHeight,
+            0.1,
+            1000
+        );
+
+        const orbit = new OrbitControls(camera,renderer.domElement);
+       
+
+        camera.position.set(0,20,-30);
+        const boxGeometry = new THREE.BoxGeometry(2,2,2);
+        const boxMat = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            wireframe : true
+        });
+        const boxMesh = new THREE.Mesh(boxGeometry,boxMat);
+        scene.add(boxMesh);
+
+        const groundGeo = new THREE.PlaneGeometry(30,30);
+        const groundMat = new THREE.MeshBasicMaterial({
+            color:0xffffff,
+            //side : THREE.DobleSide,
+            wireframe: true
+        });
+        const groundMesh = new THREE.Mesh(groundGeo,groundMat);
+        scene.add(groundMesh);
+        
+        const world = new CANNON.World({
+          gravity : new CANNON.Vec3(0,-9.81,0)
+        });
+
+        const groundBody = new CANNON.Body({
+            shape : new CANNON.Plane(),
+            type : CANNON.Body.STATIC
+        })
+        world.addBody(groundBody);
+        groundBody.quaternion.setFromEuler(-Math.PI/2,0,0);
+
+        const boxBody = new CANNON.Body({
+            mass : 1,
+            shape : new CANNON.Box(new CANNON.Vec3(1,1,1))
+        });
+        world.addBody(boxBody);
+
+        const timeStep = 1 / 60 ;
+
+        function animate(){
+            world.step(timeStep);
+            groundMesh.position.copy(groundBody.position);
+            groundMesh.quaternion.copy(groundBody.quaternion);
+            boxMesh.position.copy(boxBody.position);
+            boxMesh.quaternion.copy(boxBody.quaternion);
+
+            renderer.render(scene,camera);
+        }
+        renderer.setAnimationLoop(animate);
+        window.addEventListener('resize',function(){
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth,window.innerHeight);
+        });
+</script>
+</head>
+<body>
+</body>
+
+</html>
