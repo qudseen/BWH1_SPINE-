@@ -50,7 +50,7 @@
         const geometry = object.children[0].geometry;
         mesh = new THREE.Mesh(geometry, material)
        scene.add(mesh)
-       mesh.rotateZ(Math.PI);
+       //mesh.rotateZ(Math.PI);
        const boundingBox = new THREE.Box3().setFromObject(object);
             const width = boundingBox.max.x - boundingBox.min.x;
             const height = boundingBox.max.y - boundingBox.min.y;
