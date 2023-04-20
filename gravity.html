@@ -95,8 +95,8 @@
 
         function animate(){
             world.step(timeStep);
-            groundMesh.position.copy(groundBody.position);
-            groundMesh.quaternion.copy(groundBody.quaternion);
+            groundBody.position.copy(groundMesh.position);
+            groundBody.quaternion.copy(groundMesh.quaternion);
             boxMesh.position.copy(boxBody.position);
             boxMesh.quaternion.copy(boxBody.quaternion);
             mesh.position.copy(body.position);
