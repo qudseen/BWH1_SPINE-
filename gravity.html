@@ -8,7 +8,8 @@
         import {OrbitControls} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
         import { STLLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/STLLoader.js";
         import { OBJLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/OBJLoader.js";
-        import * as CANNON from 'https://cdn.skypack.dev/cannon-es';
+        import * as CANNON from 'https://unpkg.com/cannon-es@0.19.0/dist/cannon-es.js'
+
         // webgl 
         const renderer = new THREE.WebGLRenderer();
 
@@ -28,83 +29,107 @@
         const orbit = new OrbitControls(camera,renderer.domElement);
        
 
-        camera.position.set(0,200,-300);
+        camera.position.set(0,200,-100);
         orbit.update();
         const ambientLight = new THREE.AmbientLight();
        scene.add( ambientLight );
 
-       /*const directionalLight = new THREE.DirectionalLight( 0xffffff, 5.0 );
+       const directionalLight = new THREE.DirectionalLight( 0xffffff, 5.0 );
        directionalLight.position.set( 10, 100, -100 );
-       scene.add( directionalLight );*/
+       scene.add( directionalLight );
         
         
         const world = new CANNON.World({
-          gravity : new CANNON.Vec3(0,9.81,0)
+          gravity : new CANNON.Vec3(0,-9.81,0)
         });
 
+        const groundBody = new CANNON.Body({
+        shape: new CANNON.Box(new CANNON.Vec3(1500, 1500, 1)),
+        type: CANNON.Body.STATIC,
+        });
+        world.addBody(groundBody);
         
+        groundBody.quaternion.setFromEuler(-Math.PI/2,0,0);
         let mesh,body;
         const material = new THREE.MeshPhysicalMaterial({ color: 0xaaaaaa })
        const loader = new OBJLoader()
        loader.load('resources/Model_8_8.obj', (object) => {
         const geometry = object.children[0].geometry;
         mesh = new THREE.Mesh(geometry, material)
-       scene.add(mesh)
-       //mesh.rotateZ(Math.PI);
-       const boundingBox = new THREE.Box3().setFromObject(object);
+       scene.add(mesh)  
+       mesh.rotateY(-Math.PI);
+       
+       
+      // const boundingBox = new THREE.Box3().setFromObject(mesh)
+      // const boundingBox = new THREE.Box3().setFromObject(object);
+      const boundingBox = new THREE.Box3().setFromObject(object.children[0]);
             const width = boundingBox.max.x - boundingBox.min.x;
             const height = boundingBox.max.y - boundingBox.min.y;
             const depth = boundingBox.max.z - boundingBox.min.z;
             const shape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
             body= new CANNON.Body({
-              mass :1,
+              mass :100,
               shape :shape
             })
+            mesh.position.set(0, height/2 + 0.5, 0);
             //body3.position.set(0, 1800, -100);
             world.addBody(body);
-            const boxGeometry = new THREE.BoxGeometry(20,20,20);
+            body.position.set(0, 200, -100); 
+
+            const boxGeometry = new THREE.BoxGeometry(30,30,30);
         const boxMat = new THREE.MeshBasicMaterial({
             color: 0x00ff00,
             wireframe : true
         });
+        const groundMaterial = new CANNON.Material("groundMaterial");
+        const modelMaterial = new CANNON.Material("modelMaterial");
+
+        const contactMaterial = new CANNON.ContactMaterial(
+         groundMaterial,
+          modelMaterial,
+         { friction: 0.5, restitution: 0.2 } 
+         );
+        world.addContactMaterial(contactMaterial);
+
+
+           groundBody.material = groundMaterial;
+          body.material = modelMaterial;
+
             const boxMesh = new THREE.Mesh(boxGeometry,boxMat);
             scene.add(boxMesh);
 
         const groundGeo = new THREE.PlaneGeometry(300,300);
         const groundMat = new THREE.MeshBasicMaterial({
             color:0xffffff,
-            side : THREE.DobleSide,
+            side : THREE.DoubleSide,
             wireframe: true
         });
         const groundMesh = new THREE.Mesh(groundGeo,groundMat);
         scene.add(groundMesh);
-        const groundBody = new CANNON.Body({
-            shape : new CANNON.Plane(),
-            type : CANNON.Body.STATIC
-        })
-        world.addBody(groundBody);
-        groundBody.quaternion.setFromEuler(Math.PI/2,0,0);
+       
 
         const boxBody = new CANNON.Body({
-            mass : 1,
-            shape : new CANNON.Box(new CANNON.Vec3(10,10,10))
+            mass : 10,
+            shape : new CANNON.Box(new CANNON.Vec3(15,15,15))
         });
         world.addBody(boxBody);
+        boxBody.position.y = 100;
     
         const timeStep = 1 / 60 ;
 
         function animate(){
-            world.step(timeStep);
-            groundBody.position.copy(groundMesh.position);
-            groundBody.quaternion.copy(groundMesh.quaternion);
-            boxMesh.position.copy(boxBody.position);
-            boxMesh.quaternion.copy(boxBody.quaternion);
-            mesh.position.copy(body.position);
-            mesh.quaternion.copy(body.quaternion);
+      world.step(timeStep);
+      groundMesh.position.copy(groundBody.position);
+     groundMesh.quaternion.copy(groundBody.quaternion);
+     boxMesh.position.copy(boxBody.position);
+     boxMesh.quaternion.copy(boxBody.quaternion);
+     mesh.position.copy(body.position);
+     mesh.position.y += (height / 2);
+     mesh.quaternion.copy(body.quaternion);
 
-            renderer.render(scene,camera);
-        }
-        renderer.setAnimationLoop(animate);
+      renderer.render(scene,camera);
+      }
+     renderer.setAnimationLoop(animate);   
         window.addEventListener('resize',function(){
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
