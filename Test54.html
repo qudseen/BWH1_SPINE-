@@ -1,0 +1,128 @@
+<html>
+  <head>
+    <title>My 3D Model</title>
+    <script type="module">
+        import * as THREE from "https://cdn.skypack.dev/three@0.136.0/build/three.module.js";
+        import { GUI } from "https://cdn.skypack.dev/dat.gui@0.7.7/build/dat.gui.module.js";
+        import { TrackballControls } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/TrackballControls.js";
+        import {OrbitControls} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
+        import { STLLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/STLLoader.js";
+        import { OBJLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/OBJLoader.js";
+        import * as CANNON from 'https://unpkg.com/cannon-es@0.19.0/dist/cannon-es.js'
+
+        // webgl 
+        const renderer = new THREE.WebGLRenderer();
+
+        renderer.setSize(window.innerWidth,window.innerHeight);
+
+        document.body.appendChild(renderer.domElement);
+       // scene
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth/window.innerHeight,
+            0.01,
+            10000
+        );
+
+        const orbit = new OrbitControls(camera,renderer.domElement);
+       
+
+        camera.position.set(0,300,-500);
+        orbit.update();
+        const ambientLight = new THREE.AmbientLight();
+       scene.add( ambientLight );
+
+       const directionalLight = new THREE.DirectionalLight( 0xffffff, 5.0 );
+       directionalLight.position.set( 10, 100, -100 );
+       scene.add( directionalLight );
+        
+        
+        const world = new CANNON.World({
+          gravity : new CANNON.Vec3(0,9.81,0)
+        });
+        
+       
+        const material = new THREE.MeshPhysicalMaterial({ color: 0xaaaaaa })
+        const objectFiles = ['resources/Model_8_8.obj', 'resources/Model_9_9.obj', 'resources/Model_10_10.obj'];
+        const loaders = objectFiles.map(() => new OBJLoader());
+        const shapes = objectFiles.map(() => []);
+        const bodies = objectFiles.map(() => []);
+       const meshes = objectFiles.map(() => []);
+       objectFiles.forEach((file,i) => {
+       loaders[i].load(file, (object) => {
+        const geometry = object.children[0].geometry;
+        const mesh = new THREE.Mesh(geometry, material)
+       meshes[i].push(mesh);
+       scene.add(mesh) ; 
+
+       
+       
+      // const boundingBox = new THREE.Box3().setFromObject(mesh)
+     // const boundingBox = new THREE.Box3().setFromObject(object);
+      const boundingBox = new THREE.Box3().setFromObject(object.children[0]);
+            const width = boundingBox.max.x - boundingBox.min.x;
+            const height = boundingBox.max.y - boundingBox.min.y;
+            const depth = boundingBox.max.z - boundingBox.min.z;
+            const center = new THREE.Vector3();
+            boundingBox.getCenter(center);
+            const shape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
+            const body= new CANNON.Body({
+              mass :1,
+              restitution : 0.5,
+              shape :shape
+            })
+            shapes[i].push(shape);
+            bodies[i].push(body);
+            //body3.position.set(0, 1800, -100);
+            world.addBody(body);
+            mesh.position.copy(center);
+          
+            mesh.quaternion.set(0, 0, 0, 1);
+            console.log("Model position: ", mesh.position);
+            console.log("Model rotation: ", mesh.rotation);
+            //body.position.set(0, 200, -100); 
+            const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
+            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0xeeeeee });
+            const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+           groundMesh.receiveShadow = true;
+           scene.add(groundMesh);
+           const groundShape = new CANNON.Plane();
+           const groundBody = new CANNON.Body({ mass: 0 });
+           groundBody.addShape(groundShape);
+           groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+         world.addBody(groundBody);
+         console.log("Ground position: ", groundMesh.position);
+         console.log("Ground rotation: ", groundMesh.rotation);
+         mesh.position.set(center.x, center.y + height / 2 + groundMesh.position.y, center.z);
+         const fixedRotation = new CANNON.Quaternion();
+         fixedRotation.setFromEuler(-Math.PI / 2, 0, 0, "XYZ");
+          body.quaternion.copy(fixedRotation);
+        const timeStep = 1 / 60 ;
+
+        function animate(){
+      world.step(timeStep);
+      groundMesh.position.copy(groundBody.position);
+      groundMesh.quaternion.copy(groundBody.quaternion);
+      objectFiles.forEach((file, i) => {
+    meshes[i].forEach((mesh, j) => {
+      mesh.position.copy(bodies[i][j].position);
+      mesh.quaternion.copy(bodies[i][j].quaternion);
+    });
+  });
+      renderer.render(scene,camera);
+      }
+     renderer.setAnimationLoop(animate);   
+        window.addEventListener('resize',function(){
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth,window.innerHeight);
+        });
+      })
+    })
+</script>
+</head>
+<body>
+</body>
+</html>
