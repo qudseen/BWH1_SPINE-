@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>cannon.js - constraints demo</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/style.css" type="text/css"/>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  </head>
+  <body>
+    <script src="../build/cannon.js"></script>
+    <script src="../build/cannon.demo.js"></script>
+    <script src="../libs/dat.gui.js"></script>
+    <script src="../libs/Three.js"></script>
+    <script src="../libs/TrackballControls.js"></script>
+    <script src="../libs/Detector.js"></script>
+    <script src="../libs/Stats.js"></script>
+    <script src="../libs/smoothie.js"></script>
+     <script type="module">
+        import * as THREE from "https://cdn.skypack.dev/three@0.136.0/build/three.module.js";
+        import { GUI } from "https://cdn.skypack.dev/dat.gui@0.7.7/build/dat.gui.module.js";
+        import { TrackballControls } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/TrackballControls.js";
+        import {OrbitControls} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
+        import { STLLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/STLLoader.js";
+        import { OBJLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/OBJLoader.js";
+
+        /**
+         * In this demo, we demonstrate some constraint types. Constraints
+         * removes degrees of freedom from bodies and forces them to move in
+         * a way defined by the constraint.
+         */
+
+        var demo = new CANNON.Demo()
+        demo.addScene("lock",function(){
+            var world = setupWorld(demo);
+            world.solver.iterations = 20;
+            world.gravity.set(0,0,-10);
+            var size = 0.5;
+            var boxShape = new CANNON.Box(new CANNON.Vec3(size,size,size));
+            var mass = 1;
+            var space = 0.1*size;
+
+            
+      // Sphere chain
+      /*demo.addScene("Sphere chain",function(){
+          var size = 0.5;
+          var dist = size*2+0.12;
+          var world = setupWorld(demo);
+          //world.solver.setSpookParams(1e20,3);
+          //var sphereShape = new CANNON.Sphere(size);
+          //var mass = 1;
+          //var lastBody = null;
+         // var N = 20;
+         // world.solver.iterations = N; // To be able to propagate force throw the chain of N spheres, we need at least N solver iterations.
+         // for(var i=0; i<N; i++){*/
+            // Create a new body
+            demo.addScene("Sphere chain",function(){
+          var size = 0.5;
+          var dist = size*2+0.12;
+          var world = setupWorld(demo);
+            const material = new THREE.MeshPhysicalMaterial({ color: 0xFFFFFF })
+            const loader = new OBJLoader();
+
+         /*loader.load("resources/Model_8_8.obj", function(object) {
+          const geo = object.children[0].geometry;
+          const mesh = new THREE.Mesh(geo, material)
+           const boundingBox = new THREE.Box3().setFromObject(object.children[0]);
+            const width = boundingBox.max.x - boundingBox.min.x;
+            const height = boundingBox.max.y - boundingBox.min.y;
+            const depth = boundingBox.max.z - boundingBox.min.z;
+            const center = new THREE.Vector3();
+            boundingBox.getCenter(center);
+            const sphereShape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))*/
+            loader.load("resources/Model_8_8.obj", function(object) {
+              const geo = object.children[0].geometry;
+           const sphereShape = new CANNON.Sphere(geo);
+           /* let geometry = new THREE.BufferGeometry();
+           geometry.setAttribute('position', mesh.geometry.getAttribute('position'));
+
+            geometry = THREE.BufferGeometryUtils.mergeVertices(geometry); 
+           //if using import statement  
+            //geometry = BufferGeometryUtils.mergeVertices(geometry);  
+
+            let position = geometry.attributes.position.array;  
+           let geomFaces = geometry.index.array;   
+
+          const points = [];  
+          const faces = [];  
+
+        for(var i = 0; i < position.length; i += 3){  
+       points.push(new CANNON.Vec3(position[i], position[i+1], position[i+2]));  
+        }  
+
+       for(var i = 0; i < geomFaces.length; i += 3){  
+        faces.push(geomFaces[i], geomFaces[i+1], geomFaces[i+2]);  
+          }  
+
+
+        var sphereShape =  new CANNON.ConvexPolyhedron(points,faces);*/  
+        // create a box shape without using indices
+     //   Create a Cannon.js body to represent the spine
+        var mass = 1;
+          var lastBody = null;
+         var N = 3;
+          world.solver.iterations = N; // To be able to propagate force throw the chain of N spheres, we need at least N solver iterations.
+          for(var i=0; i<N; i++){
+         var spherebody = new CANNON.Body({ mass: i===0 ? 0 : mass });
+         spherebody.addShape(sphereShape);
+            spherebody.position.set(0,0,(N-i)*dist);
+            spherebody.velocity.x = i;
+            world.addBody(spherebody);
+            demo.addVisual(spherebody);
+
+            // Connect this body to the last one added
+            var c;
+            if(lastBody!==null){
+              world.addConstraint(c = new CANNON.DistanceConstraint(spherebody,lastBody,dist));
+            }
+
+            // Keep track of the lastly added body
+            lastBody = spherebody;
+          }
+        })
+        });
+    })
+
+      function setupWorld(demo){
+        // Create world
+        var world = demo.getWorld();
+        world.gravity.set(0,0,-40);
+        world.broadphase = new CANNON.NaiveBroadphase();
+        world.solver.iterations = 10;
+
+        // ground plane
+        var groundShape = new CANNON.Plane();
+        var groundBody = new CANNON.Body({ mass: 0 });
+        groundBody.addShape(groundShape);
+        groundBody.position.set(0,0,1);
+        world.addBody(groundBody);
+        demo.addVisual(groundBody);
+
+        world.quatNormalizeFast = false;
+        world.quatNormalizeSkip = 0;
+
+        return world;
+      };
+    
+
+      demo.start();
+    
+
+    </script>
+  </body>
+</html>
