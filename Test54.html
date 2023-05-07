@@ -49,7 +49,7 @@
         const loaders = objectFiles.map(() => new OBJLoader());
         const shapes = objectFiles.map(() => []);
         const bodies = objectFiles.map(() => []);
-       const meshes = objectFiles.map(() => []);
+       const meshes = Array.from({length: objectFiles.length}, () => []);
        var constraints = [];
        objectFiles.forEach((file,i) => {
        loaders[i].load(file, (object) => {
