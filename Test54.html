@@ -50,12 +50,13 @@
         const shapes = objectFiles.map(() => []);
         const bodies = objectFiles.map(() => []);
        const meshes = objectFiles.map(() => []);
+       var constraints = [];
        objectFiles.forEach((file,i) => {
        loaders[i].load(file, (object) => {
         const geometry = object.children[0].geometry;
         const mesh = new THREE.Mesh(geometry, material)
-       meshes[i].push(mesh);
-       scene.add(mesh) ; 
+        scene.add(mesh) ; 
+        meshes[i].push(mesh);
 
        
        
@@ -82,6 +83,12 @@
             mesh.quaternion.set(0, 0, 0, 1);
             console.log("Model position: ", mesh.position);
             console.log("Model rotation: ", mesh.rotation);
+            for (var i = 0; i < len[bodies] - 1; i++) {
+           var c = new CANNON.LockConstraint(bodies[i], bodies[i + 1], { maxForce: Number.MAX_VALUE });
+           c.collideConnected = false;
+           world.addConstraint(c);
+           constraints.push(c);
+           }
             //body.position.set(0, 200, -100); 
             const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
             const groundMaterial = new THREE.MeshPhongMaterial({ color: 0xeeeeee });
